@@ -1,6 +1,6 @@
-﻿namespace MediatR.Behaviours;
+﻿namespace MediatR.Extensions.Behaviours;
 
-public sealed class FluentValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> 
+public sealed class FluentValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
 where TRequest : IRequest<TResponse>
 where TResponse : ResultBase, new()
 {
@@ -18,16 +18,16 @@ where TResponse : ResultBase, new()
 
         var context = new ValidationContext<TRequest>(request);
 
-        var validationResults = await Task.WhenAll(
+        ValidationResult[] validationResults = await Task.WhenAll(
             _validators.Select(v =>
                 v.ValidateAsync(context, cancellationToken)));
 
         var failures = validationResults
-            .Where(r => r.Errors.Any())
+            .Where(r => r.Errors.Count != 0)
             .SelectMany(r => r.Errors)
             .ToList();
 
-        if (failures.Any())
+        if (failures.Count != 0)
         {
           var response = new TResponse();
           response.Errors.Add(new ValidationError(failures));

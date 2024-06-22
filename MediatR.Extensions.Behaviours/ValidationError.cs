@@ -1,6 +1,8 @@
-namespace MediatR.Behaviours;
+using MediatR.Extensions.Abstractions;
 
-public class ValidationError : Error
+namespace MediatR.Extensions.Behaviours;
+
+internal sealed class ValidationError : Error, IValidationError
 {
   public IReadOnlyList<ValidationFailure> Errors { get; private set; }
 
