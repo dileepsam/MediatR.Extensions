@@ -17,7 +17,7 @@ public static class Extensions
         return Results.Ok(result.Value);
     }
 
-    internal static IResult ToValidationFailure(IValidationError validationError)
+    public static IResult ToValidationFailure(IValidationError validationError)
     {
         var errors = validationError.Errors.GroupBy(x => x.PropertyName)
                                            .ToDictionary(x => x.Key, x => x.Select(x => x.ErrorMessage).ToArray());
