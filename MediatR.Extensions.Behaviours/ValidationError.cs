@@ -11,4 +11,3 @@ internal sealed class ValidationError : Error, IValidationError
     Errors = failures;
   }
 }
-

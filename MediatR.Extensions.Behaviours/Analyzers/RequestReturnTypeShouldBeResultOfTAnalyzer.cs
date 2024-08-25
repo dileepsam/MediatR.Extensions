@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,7 +10,7 @@ namespace MediatR.Extensions.Behaviours.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class RequestReturnTypeShouldBeResultOfTAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly DiagnosticDescriptor Rule = new(
+    private static readonly DiagnosticDescriptor s_rule = new(
         "MEDIATR0001",
         "MediatR request should have a return type of Result<T>",
         "MediatR request should have a return type of Result<T>",
@@ -17,11 +18,15 @@ public class RequestReturnTypeShouldBeResultOfTAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [s_rule];
 
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        if (!Debugger.IsAttached)
+        {
+            Debugger.Launch();
+        }
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
 
         context.RegisterSyntaxNodeAction(AnalyzeClassDeclaration, SyntaxKind.ClassDeclaration);
@@ -29,6 +34,10 @@ public class RequestReturnTypeShouldBeResultOfTAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeClassDeclaration(SyntaxNodeAnalysisContext context)
     {
+        if (!Debugger.IsAttached)
+        {
+            Debugger.Launch();
+        }
         var classDeclaration = (ClassDeclarationSyntax)context.Node;
 
         BaseListSyntax? baseList = classDeclaration.BaseList;
@@ -47,7 +56,7 @@ public class RequestReturnTypeShouldBeResultOfTAnalyzer : DiagnosticAnalyzer
                         if (typeArgument is GenericNameSyntax innerGenericName && innerGenericName.Identifier.ValueText == "Result")
                         {
                             // Check if it is Result<T> where T can be any type
-                            var diagnostic = Diagnostic.Create(Rule, classDeclaration.Identifier.GetLocation(), classDeclaration.Identifier.ValueText);
+                            var diagnostic = Diagnostic.Create(s_rule, classDeclaration.Identifier.GetLocation(), classDeclaration.Identifier.ValueText);
                             context.ReportDiagnostic(diagnostic);
                         }
                     }
